@@ -13,6 +13,7 @@ class ComposeViewController: UIViewController {
     @IBOutlet var SSTextView: UITextView!
     @IBOutlet var charRemainingLabel: UILabel!
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 

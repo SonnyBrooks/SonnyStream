@@ -95,7 +95,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <outlet property="SSTextView" destination="SNO-ip-IqM" id="oiK-Wu-9OS"/>
+                        <outlet property="SSTextView" destination="SNO-ip-IqM" id="Zly-Vp-vUt"/>
                         <outlet property="charRemainingLabel" destination="xu7-XY-JIf" id="ADN-Q6-0Z3"/>
                     </connections>
                 </viewController>

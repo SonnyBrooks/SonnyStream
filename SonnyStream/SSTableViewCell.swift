@@ -10,6 +10,10 @@ import UIKit
 
 class SSTableViewCell: UITableViewCell {
 
+    @IBOutlet var usernameLabel: UILabel! = UILabel()
+    @IBOutlet var timestampLabel: UILabel! = UILabel()
+    @IBOutlet var sonRayTextView: UITextView! = UITextView()
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

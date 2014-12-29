@@ -9,7 +9,92 @@
 import UIKit
 
 class TimelineTableViewController: UITableViewController {
+    
+    var streamData = [PFObject]()
 
+    override func viewDidAppear(animated: Bool) {
+        self.loadData()
+        
+        if((PFUser.currentUser()) == nil)
+        {
+            var loginAlert:UIAlertController = UIAlertController(title: "Sign up / Login", message: "Please sign up or login", preferredStyle: UIAlertControllerStyle.Alert)
+            
+            loginAlert.addTextFieldWithConfigurationHandler({
+                textfield in
+                textfield.placeholder = "Username"
+            })
+            
+            loginAlert.addTextFieldWithConfigurationHandler({
+                textfield in
+                textfield.placeholder = "Password"
+                textfield.secureTextEntry = true
+            })
+            
+            loginAlert.addAction(UIAlertAction(title: "Login", style: UIAlertActionStyle.Default, handler: {
+                alertAction in
+                let textFields:NSArray = loginAlert.textFields as AnyObject! as NSArray
+                let usernameTextField:UITextField = textFields.objectAtIndex(0) as UITextField
+                let passwordTextField:UITextField = textFields.objectAtIndex(1) as UITextField
+                
+                PFUser.logInWithUsernameInBackground(usernameTextField.text, password: passwordTextField.text)
+                {
+                    (user:PFUser!, error:NSError!) -> Void in
+                    if((user) != nil)
+                    {
+                        println("SUCCESS: User '\(usernameTextField.text)' logged in successfully!")
+                    }
+                    else
+                    {
+                        println("FAILURE: User '\(usernameTextField.text)' failed to login!")
+                    }
+                }
+                
+            }))
+            
+            loginAlert.addAction(UIAlertAction(title: "Sign up", style: UIAlertActionStyle.Default, handler: {
+                alertAction in
+                let textFields:NSArray = loginAlert.textFields as AnyObject! as NSArray
+                let usernameTextField:UITextField = textFields.objectAtIndex(0) as UITextField
+                let passwordTextField:UITextField = textFields.objectAtIndex(1) as UITextField
+                
+                var user:PFUser = PFUser()
+                user.username = usernameTextField.text
+                user.password = passwordTextField.text
+                
+                user.signUpInBackgroundWithBlock{
+                    (success:Bool!, error:NSError!)-> Void in
+                    if error == nil
+                    {
+                        println("SUCCESS: Sign up successful! - \(user.username)")
+                    }
+                    else
+                    {
+                        println("FAILURE: \(user.username) failed to sign up! - \(error)")
+                    }
+                }
+            }))
+            
+            self.presentViewController(loginAlert, animated: true, completion: nil)
+            
+        }
+    }
+    
+    @IBAction func loadData() {
+        streamData.removeAll(keepCapacity: false)
+        
+        var getStreamData:PFQuery = PFQuery(className: "sonRays")
+        getStreamData.findObjectsInBackgroundWithBlock
+        {
+            (objects:[AnyObject]!, error:NSError!)-> Void in
+            if error == nil
+            {
+                self.streamData = objects.reverse() as [PFObject]
+                println(objects)
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -34,24 +119,51 @@ class TimelineTableViewController: UITableViewController {
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Potentially incomplete method implementation.
         // Return the number of sections.
-        return 0
+        return 1
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete method implementation.
         // Return the number of rows in the section.
-        return 0
+        return streamData.count
     }
 
-    /*
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath) as UITableViewCell
+        let cell:SSTableViewCell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as SSTableViewCell
 
-        // Configure the cell...
+        let sonRay: PFObject = self.streamData[indexPath.row] as PFObject
 
+        cell.sonRayTextView.alpha = 0
+        cell.usernameLabel.alpha = 0
+        cell.timestampLabel.alpha = 0
+        
+        cell.sonRayTextView.text = sonRay.objectForKey("content") as String
+        
+        var dataFormatter:NSDateFormatter = NSDateFormatter()
+        dataFormatter.dateFormat = "MM/dd/yyyy HH:mm"
+        cell.timestampLabel.text = dataFormatter.stringFromDate(sonRay.createdAt)
+        
+        var findUser: PFQuery = PFUser.query()
+        findUser.whereKey("objectId", equalTo: sonRay.objectForKey("user").objectId)
+        
+        findUser.findObjectsInBackgroundWithBlock {
+            (objects:[AnyObject]!, error:NSError!)-> Void in
+            if error == nil
+            {
+                let user:PFUser = (objects as NSArray).lastObject as PFUser
+                cell.usernameLabel.text = "@\(user.username)"
+                
+                UIView.animateWithDuration(0.5, animations: {
+                    cell.sonRayTextView.alpha = 1
+                    cell.usernameLabel.alpha = 1
+                    cell.timestampLabel.alpha = 1
+                })
+            }
+        }
+        
         return cell
     }
-    */
 
     /*
     // Override to support conditional editing of the table view.
